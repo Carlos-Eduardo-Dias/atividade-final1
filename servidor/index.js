@@ -25,7 +25,7 @@ app.use(
     secret: process.env.SECRET,
     algorithms: ["HS256"],
     getToken: req => req.cookies.token
-  }).unless({ path: ["/autenticar", "/logar", "/deslogar"] })
+  }).unless({ path: ["/autenticar", "/logar", "/deslogar", "/cadastro"] })
 );
 
 app.get('/', async function(req, res){
@@ -50,8 +50,9 @@ app.get('/listar', async function(req, res){
   res.json(usuarios);
 })
 
-app.post('/logar', (req, res) => {
-  if(req.body.user === 'carlos' && req.body.password === 'blablabla'){
+app.post('/logar', async (req, res) => {
+  const users = await usuario.findOne({ where: { user: req.body.user }})
+  if(req.body.user === users.user && req.body.password === users.password ){
     const id = 1;
     const token = jwt.sign({ id }, process.env.SECRET, {
       expiresIn: 3600 // expires in 1 hour
