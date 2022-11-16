@@ -3,6 +3,7 @@ require("dotenv-safe").config();
 const jwt = require('jsonwebtoken');
 var { expressjwt: expressJWT } = require("express-jwt");
 const cors = require('cors');
+const crypto = require('./crypto');
 
 var cookieParser = require('cookie-parser')
 
@@ -41,7 +42,10 @@ app.get('/cadastro', async function(req, res){
 })
 
 app.post('/cadastro', async function(req, res){
-  const usuario_ = await usuario.create(req.body)
+  const criptografar = crypto.encrypt(req.body.password)
+  const { password, name, user } = req.body
+  console.log({ password, name, user })
+  const usuario_ = await usuario.create({ password: criptografar, name, user });
   res.json(usuario_);
 })
 
@@ -51,8 +55,10 @@ app.get('/listar', async function(req, res){
 })
 
 app.post('/logar', async (req, res) => {
-  const users = await usuario.findOne({ where: { user: req.body.user }})
-  if(req.body.user === users.user && req.body.password === users.password ){
+  const users = await usuario.findOne({ where: { user: req.body.user }});
+  console.log(users)
+  const descriptografar = crypto.decrypt(users.password)
+  if (req.body.user === users.user && req.body.password === descriptografar) {
     const id = 1;
     const token = jwt.sign({ id }, process.env.SECRET, {
       expiresIn: 3600 // expires in 1 hour
